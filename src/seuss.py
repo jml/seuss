@@ -34,9 +34,11 @@ class Parser(Generic[T]):
     """
 
     def map(self, function: Callable[[T], B]) -> "Parser[B]":
+        """Run 'function' over the result of this parser."""
         return Map(function, self)
 
     def and_then(self, function: Callable[[T], "Parser[B]"]) -> "Parser[B]":
+        """Construct another parser with the output of this one."""
         return AndThen(self, function)
 
 
