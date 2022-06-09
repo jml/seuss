@@ -91,7 +91,6 @@ def AndThen(previous: Parser[A], callback: Callable[[A], Parser[B]]) -> Parser[B
 
 
 # TODO: Some way of handling applicative
-# TODO: Parse a YYYY-MM-DD date
 # TODO: sequence
 # TODO: replicate
 # TODO: yield expression syntax?

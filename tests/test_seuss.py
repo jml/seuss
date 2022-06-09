@@ -1,5 +1,7 @@
 """Tests for seuss."""
 
+from datetime import date
+
 from seuss import AndThen, Digit, Map, Pure, String
 
 
@@ -41,3 +43,27 @@ def test_map_helper() -> None:
 
 def test_and_then_helper() -> None:
     assert list(Digit().and_then(Pure).parse("420")) == list(Digit().parse("420"))  # type: ignore
+
+
+def test_and_then_results() -> None:
+    """We can chain together parsers to parse more complex strings."""
+    two_digit_number = (
+        Digit().and_then(lambda a: Digit().and_then(lambda b: Pure(a + b))).map(int)
+    )
+    assert list(two_digit_number.parse("42")) == [(42, "")]
+
+
+def test_parse_iso_date() -> None:
+    two_digits = Digit().and_then(lambda a: Digit().and_then(lambda b: Pure(a + b)))
+    four_digits = two_digits.and_then(
+        lambda a: two_digits.and_then(lambda b: Pure(a + b))
+    )
+    sep = String("-")
+    iso_date = four_digits.map(int).and_then(
+        lambda year: sep.and_then(lambda _: two_digits.map(int)).and_then(
+            lambda month: sep.and_then(lambda _: two_digits.map(int)).and_then(
+                lambda day: Pure(date(year, month, day))
+            )
+        )
+    )
+    assert list(iso_date.parse("2022-06-09")) == [(date(2022, 6, 9), "")]
