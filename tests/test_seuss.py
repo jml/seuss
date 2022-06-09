@@ -5,6 +5,15 @@ from datetime import date
 from seuss import AndThen, Digit, Map, Pure, String
 
 
+def parse_strict(parser, text):
+    """Parse 'text' and fail if the whole string isn't parsed or if there's more than one way to parse it."""
+    # Might add this to the main class.
+    result = list(parser.parse(text))
+    [(value, remainder)] = result
+    assert remainder == ""
+    return value
+
+
 def test_string() -> None:
     assert list(String("fnord").parse("fnord hello")) == [("fnord", " hello")]
     assert list(String("fnord").parse("hello world")) == []
@@ -50,7 +59,7 @@ def test_and_then_results() -> None:
     two_digit_number = (
         Digit().and_then(lambda a: Digit().and_then(lambda b: Pure(a + b))).map(int)
     )
-    assert list(two_digit_number.parse("42")) == [(42, "")]
+    assert parse_strict(two_digit_number, "42") == 42
 
 
 def test_parse_iso_date() -> None:
@@ -66,4 +75,4 @@ def test_parse_iso_date() -> None:
             )
         )
     )
-    assert list(iso_date.parse("2022-06-09")) == [(date(2022, 6, 9), "")]
+    assert parse_strict(iso_date, "2022-06-09") == date(2022, 6, 9)
