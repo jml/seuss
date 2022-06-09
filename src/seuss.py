@@ -70,3 +70,11 @@ class AndThen(Generic[A, B]):
         for (value, remaining) in self.previous.parse(text):
             results.extend(self.callback(value).parse(remaining))
         return results
+
+# TODO: Some way of handling applicative
+# TODO: fmap
+# TODO: Parse a YYYY-MM-DD date
+# TODO: sequence
+# TODO: replicate
+# TODO: Turn lists into Iterables / Iterators
+# TODO: yield expression syntax?

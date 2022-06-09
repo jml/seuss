@@ -8,3 +8,10 @@ An experiment in Python parsers.
 > Of things and strings.
 
 Source: http://www.willamette.edu/~fruehr/haskell/seuss.html
+
+The purpose of this repository is to provide me with a playground for translating the ideas in Conor McBride's talk, [What are types for?][type-talk] into Python.
+
+This is *not* intended as production quality code.
+
+
+[type-talk]: https://www.youtube.com/watch?v=3U3lV5VPmOU
