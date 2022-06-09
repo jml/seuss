@@ -25,7 +25,7 @@ def test_pure_and_then() -> None:
 
 def test_and_then_pure() -> None:
     p = Digit()
-    q = AndThen(p, lambda x: Pure(x))
+    q = AndThen(p, Pure)  # type: ignore
     assert list(q.parse("420")) == list(p.parse("420"))
 
 

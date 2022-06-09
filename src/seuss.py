@@ -8,9 +8,11 @@ import attrs
 
 A = TypeVar("A")
 B = TypeVar("B")
-T = TypeVar("T", covariant=True)
+T = TypeVar("T")
 
-class Parser(Protocol[T]):
+
+@attrs.define
+class Parser(Generic[T]):
     """A monadic parser.
 
     > A parser for things
@@ -24,71 +26,58 @@ class Parser(Protocol[T]):
     have to.
     """
 
-    def parse(self, text: str) -> Iterator[tuple[T, str]]:
-        """Parse T out of text, and return what's left of text.
+    parse: Callable[[str], Iterator[tuple[T, str]]]
+    """Parse T out of text, and return what's left of text.
 
-        If we cannot parse the text, return an empty iterator.
-        If there are multiple possible ways to parse the text,
-        return an iterator that yields multiple results.
-        """
-        ...
+    If we cannot parse the text, return an empty iterator.
+    If there are multiple possible ways to parse the text,
+    return an iterator that yields multiple results.
+    """
 
 
-@attrs.define
-class String:
+def String(match: str) -> Parser[str]:
     """Parse out a constant string."""
-    match: str
+    def parse(text: str) -> Iterator[tuple[str, str]]:
+        if text.startswith(match):
+            yield (match, text[len(match):])
+    return Parser(parse)
 
-    def parse(self, text: str) -> Iterator[tuple[str, str]]:
-        if text.startswith(self.match):
-            yield (self.match, text[len(self.match):])
 
-
-@attrs.define
-class Digit:
+def Digit() -> Parser[str]:
     """Parse a single digit.
 
     Return it as a character to give us more flexibility in how we use it.
     """
-    def parse(self, text: str) -> Iterator[tuple[str, str]]:
+    def parse(text: str) -> Iterator[tuple[str, str]]:
         if text and text[0] in string.digits:
             yield (text[0], text[1:])
+    return Parser(parse)
 
 
-@attrs.define
-class Map(Generic[A, B]):
-    function: Callable[[A], B]
-    parser: Parser[A]
-
-    def parse(self, text: str) -> Iterator[tuple[B, str]]:
-        for (value, remaining) in self.parser.parse(text):
-            yield (self.function(value), remaining)
+def Map(function: Callable[[A], B], parser: Parser[A]) -> Parser[B]:
+    def parse(text: str) -> Iterator[tuple[B, str]]:
+        for (value, remaining) in parser.parse(text):
+            yield (function(value), remaining)
+    return Parser(parse)
 
 
-@attrs.define
-class Pure(Generic[T]):
+def Pure(value: T) -> Parser[T]:
     """Inject a value into the parsed result."""
-
-    # TODO: Maybe "inject" might be clearer?
-    value: T
-
-    def parse(self, text: str) -> Iterator[tuple[T, str]]:
-        yield (self.value, text)
+    def parse(text: str) -> Iterator[tuple[T, str]]:
+        yield (value, text)
+    return Parser(parse)
 
 
-@attrs.define
-class AndThen(Generic[A, B]):
+def AndThen(previous: Parser[A], callback: Callable[[A], Parser[B]]) -> Parser[B]:
     """Run another parser that's constructed with the output of the previous one."""
-
-    previous: Parser[A]
-    callback: Callable[[A], Parser[B]]
-
-    def parse(self, text: str) -> Iterator[tuple[B, str]]:
-        for (value, remaining) in self.previous.parse(text):
-            yield from self.callback(value).parse(remaining)
+    def parse(text: str) -> Iterator[tuple[B, str]]:
+        for (value, remaining) in previous.parse(text):
+            yield from callback(value).parse(remaining)
+    return Parser(parse)
 
 # TODO: Some way of handling applicative
 # TODO: Parse a YYYY-MM-DD date
 # TODO: sequence
 # TODO: replicate
 # TODO: yield expression syntax?
+# TODO: Run mypy in pre-commit
