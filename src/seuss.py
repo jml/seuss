@@ -41,6 +41,10 @@ class Parser(Generic[T]):
         """Construct another parser with the output of this one."""
         return AndThen(self, function)
 
+    def then(self, next_parser: "Parser[B]") -> "Parser[B]":
+        """Run another parser after this one, discarding this one's result."""
+        return AndThen(self, lambda _: next_parser)
+
 
 def String(match: str) -> Parser[str]:
     """Parse out a constant string."""

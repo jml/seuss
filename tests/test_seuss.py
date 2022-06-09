@@ -76,3 +76,19 @@ def test_parse_iso_date() -> None:
         )
     )
     assert parse_strict(iso_date, "2022-06-09") == date(2022, 6, 9)
+
+
+def test_parse_iso_date_then() -> None:
+    two_digits = Digit().and_then(lambda a: Digit().and_then(lambda b: Pure(a + b)))
+    four_digits = two_digits.and_then(
+        lambda a: two_digits.and_then(lambda b: Pure(a + b))
+    )
+    sep = String("-")
+    iso_date = four_digits.map(int).and_then(
+        lambda year: sep.then(two_digits.map(int)).and_then(
+            lambda month: sep.then(two_digits.map(int)).and_then(
+                lambda day: Pure(date(year, month, day))
+            )
+        )
+    )
+    assert parse_strict(iso_date, "2022-06-09") == date(2022, 6, 9)
