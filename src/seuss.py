@@ -33,6 +33,12 @@ class Parser(Generic[T]):
     return an iterator that yields multiple results.
     """
 
+    def map(self, function: Callable[[T], B]) -> "Parser[B]":
+        return Map(function, self)
+
+    def and_then(self, function: Callable[[T], "Parser[B]"]) -> "Parser[B]":
+        return AndThen(self, function)
+
 
 def String(match: str) -> Parser[str]:
     """Parse out a constant string."""

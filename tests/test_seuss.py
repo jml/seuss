@@ -33,3 +33,11 @@ def test_and_then_pure() -> None:
 def test_map() -> None:
     p = Map(int, Digit())
     assert list(p.parse("420")) == [(4, "20")]
+
+
+def test_map_helper() -> None:
+    assert list(Digit().map(int).parse("420")) == [(4, "20")]
+
+
+def test_and_then_helper() -> None:
+    assert list(Digit().and_then(Pure).parse("420")) == list(Digit().parse("420"))  # type: ignore
