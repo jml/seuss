@@ -2,6 +2,7 @@
 
 from seuss import AndThen, Digit, Map, Pure, String
 
+
 def test_string() -> None:
     assert list(String("fnord").parse("fnord hello")) == [("fnord", " hello")]
     assert list(String("fnord").parse("hello world")) == []

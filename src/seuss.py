@@ -5,7 +5,6 @@ from typing import Callable, Generic, Iterator, Protocol, TypeVar
 
 import attrs
 
-
 A = TypeVar("A")
 B = TypeVar("B")
 T = TypeVar("T")
@@ -37,9 +36,11 @@ class Parser(Generic[T]):
 
 def String(match: str) -> Parser[str]:
     """Parse out a constant string."""
+
     def parse(text: str) -> Iterator[tuple[str, str]]:
         if text.startswith(match):
-            yield (match, text[len(match):])
+            yield (match, text[len(match) :])
+
     return Parser(parse)
 
 
@@ -48,9 +49,11 @@ def Digit() -> Parser[str]:
 
     Return it as a character to give us more flexibility in how we use it.
     """
+
     def parse(text: str) -> Iterator[tuple[str, str]]:
         if text and text[0] in string.digits:
             yield (text[0], text[1:])
+
     return Parser(parse)
 
 
@@ -58,22 +61,28 @@ def Map(function: Callable[[A], B], parser: Parser[A]) -> Parser[B]:
     def parse(text: str) -> Iterator[tuple[B, str]]:
         for (value, remaining) in parser.parse(text):
             yield (function(value), remaining)
+
     return Parser(parse)
 
 
 def Pure(value: T) -> Parser[T]:
     """Inject a value into the parsed result."""
+
     def parse(text: str) -> Iterator[tuple[T, str]]:
         yield (value, text)
+
     return Parser(parse)
 
 
 def AndThen(previous: Parser[A], callback: Callable[[A], Parser[B]]) -> Parser[B]:
     """Run another parser that's constructed with the output of the previous one."""
+
     def parse(text: str) -> Iterator[tuple[B, str]]:
         for (value, remaining) in previous.parse(text):
             yield from callback(value).parse(remaining)
+
     return Parser(parse)
+
 
 # TODO: Some way of handling applicative
 # TODO: Parse a YYYY-MM-DD date
