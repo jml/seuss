@@ -89,4 +89,3 @@ def AndThen(previous: Parser[A], callback: Callable[[A], Parser[B]]) -> Parser[B
 # TODO: sequence
 # TODO: replicate
 # TODO: yield expression syntax?
-# TODO: Run mypy in pre-commit
