@@ -8,7 +8,7 @@ import attrs
 
 A = TypeVar("A")
 B = TypeVar("B")
-T = TypeVar("T")
+T = TypeVar("T", covariant=True)
 
 class Parser(Protocol[T]):
     """A monadic parser.
