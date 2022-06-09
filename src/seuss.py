@@ -56,6 +56,7 @@ def String(match: str) -> Parser[str]:
     return Parser(parse)
 
 
+# TODO: Digit shouldn't be a function, it just does one thing.
 def Digit() -> Parser[str]:
     """Parse a single digit.
 
@@ -127,3 +128,4 @@ def replicate(n: int, parser: Parser[T]) -> Parser[list[T]]:
 # TODO: Some way of handling applicative
 # TODO: sequence
 # TODO: yield expression syntax?
+# TODO: end of input
