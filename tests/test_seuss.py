@@ -1,6 +1,6 @@
 """Tests for seuss."""
 
-from seuss import AndThen, Digit, Pure, String
+from seuss import AndThen, Digit, Map, Pure, String
 
 def test_string() -> None:
     assert String("fnord").parse("fnord hello") == [("fnord", " hello")]
@@ -27,3 +27,8 @@ def test_and_then_pure() -> None:
     p = Digit()
     q = AndThen(p, Pure)
     assert q.parse("420") == p.parse("420")
+
+
+def test_map() -> None:
+    p = Map(int, Digit())
+    assert p.parse("420") == [(4, "20")]

@@ -48,6 +48,18 @@ class Digit:
 
 
 @attrs.define
+class Map(Generic[A, B]):
+    function: Callable[[A], B]
+    parser: Parser[A]
+
+    def parse(self, text: str) -> list[tuple[B, str]]:
+        result = []
+        for (value, remaining) in self.parser.parse(text):
+            result.append((self.function(value), remaining))
+        return result
+
+
+@attrs.define
 class Pure(Generic[T]):
     """Inject a value into the parsed result."""
 
@@ -72,7 +84,6 @@ class AndThen(Generic[A, B]):
         return results
 
 # TODO: Some way of handling applicative
-# TODO: fmap
 # TODO: Parse a YYYY-MM-DD date
 # TODO: sequence
 # TODO: replicate
