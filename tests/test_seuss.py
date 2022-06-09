@@ -2,7 +2,7 @@
 
 from datetime import date
 
-from seuss import AndThen, Digit, Map, Pure, String
+from seuss import AndThen, Digit, Map, Pure, String, replicate
 
 
 def parse_strict(parser, text):
@@ -88,6 +88,27 @@ def test_parse_iso_date_then() -> None:
         lambda year: sep.then(two_digits.map(int)).and_then(
             lambda month: sep.then(two_digits.map(int)).and_then(
                 lambda day: Pure(date(year, month, day))
+            )
+        )
+    )
+    assert parse_strict(iso_date, "2022-06-09") == date(2022, 6, 9)
+
+
+def test_replicate() -> None:
+    p = replicate(4, Digit().map(int))
+    assert parse_strict(p, "1989") == [1, 9, 8, 9]
+    q = replicate(2, Digit()).map("".join).map(int)
+    assert parse_strict(q, "42") == 42
+
+
+def test_parse_iso_date_replicate() -> None:
+    year = replicate(4, Digit()).map("".join).map(int)
+    month_or_day = replicate(2, Digit()).map("".join).map(int)
+    sep = String("-")
+    iso_date = year.and_then(
+        lambda y: sep.then(
+            month_or_day.and_then(
+                lambda m: sep.then(month_or_day.and_then(lambda d: Pure(date(y, m, d))))
             )
         )
     )

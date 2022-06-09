@@ -96,7 +96,34 @@ def AndThen(previous: Parser[A], callback: Callable[[A], Parser[B]]) -> Parser[B
     return Parser(parse)
 
 
+def replicate(n: int, parser: Parser[T]) -> Parser[list[T]]:
+    """Run parser n times and yield a list of the results."""
+    # TODO: There must be a less awful way of writing this.
+    result = []
+
+    def callback(value: T) -> Parser[T]:
+        # TODO: I bet I could make this lazy with coroutines or something.
+        result.append(value)
+        return parser
+
+    if n < 1:
+        # TODO: Probably need a "Null" or "Fail" parser that just raises StopIteration.
+        raise NotImplementedError("jml doesn't know what he's doing")
+
+    p = parser
+    for i in range(1, n):
+        p = p.and_then(lambda x: callback(x))
+
+    def wrap_up(value: T) -> Parser[list[T]]:
+        result.append(value)
+        final = Pure(list(result))
+        result[:] = []
+        return final
+
+    return p.and_then(wrap_up)
+
+
+# TODO: Ongoing MyPy issue with Pure & AndThen interaction
 # TODO: Some way of handling applicative
 # TODO: sequence
-# TODO: replicate
 # TODO: yield expression syntax?
