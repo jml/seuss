@@ -2,7 +2,7 @@
 
 from datetime import date
 
-from seuss import AndThen, Digit, Map, Pure, String, replicate
+from seuss import AndThen, Digit, EndOfInput, Map, Pure, String, replicate
 
 
 def parse(parser, text):
@@ -12,7 +12,7 @@ def parse(parser, text):
 def parse_strict(parser, text):
     """Parse 'text' and fail if the whole string isn't parsed or if there's more than one way to parse it."""
     # Might add this to the main class.
-    result = list(parser.parse(text))
+    result = list(parser.passthrough(EndOfInput).parse(text))
     [(value, remainder)] = result
     assert remainder == ""
     return value
@@ -123,3 +123,7 @@ def test_parse_iso_date_replicate() -> None:
         )
     )
     assert parse_strict(iso_date, "2022-06-09") == date(2022, 6, 9)
+
+
+def test_parse_end_of_input() -> None:
+    assert list(replicate(2, Digit).passthrough(EndOfInput).parse("420")) == []

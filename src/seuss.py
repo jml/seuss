@@ -46,6 +46,10 @@ class Parser(Generic[T]):
         """Run another parser after this one, discarding this one's result."""
         return AndThen(self, lambda _: next_parser)
 
+    def passthrough(self, next_parser: "Parser[A]") -> "Parser[T]":
+        # TODO: Better name
+        return AndThen(self, lambda a: next_parser.map(lambda _: a))
+
 
 def String(match: str) -> Parser[str]:
     """Parse out a constant string."""
@@ -67,6 +71,15 @@ Digit = Parser(_parse_digit)
 
 Return it as a character to give us more flexibility in how we use it.
 """
+
+
+def _parse_end_of_input(text: str) -> Iterator[tuple[None, str]]:
+    if not text:
+        yield (None, "")
+
+
+EndOfInput = Parser(_parse_end_of_input)
+"""Parse the end of the string."""
 
 
 def Map(function: Callable[[A], B], parser: Parser[A]) -> Parser[B]:
@@ -123,4 +136,3 @@ def replicate(n: int, parser: Parser[T]) -> Parser[list[T]]:
 # TODO: Ongoing MyPy issue with Pure & AndThen interaction
 # TODO: sequence
 # TODO: yield expression syntax?
-# TODO: end of input
