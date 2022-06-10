@@ -26,6 +26,7 @@ class Parser(Generic[T]):
     """
 
     parse: Callable[[str], Iterator[tuple[T, str]]]
+
     """Parse T out of text, and return what's left of text.
 
     If we cannot parse the text, return an empty iterator.
@@ -82,6 +83,7 @@ def Pure(value: T) -> Parser[T]:
     """Inject a value into the parsed result."""
 
     def parse(text: str) -> Iterator[tuple[T, str]]:
+        print(f"lifting {value}")
         yield (value, text)
 
     return Parser(parse)
@@ -97,31 +99,20 @@ def AndThen(previous: Parser[A], callback: Callable[[A], Parser[B]]) -> Parser[B
     return Parser(parse)
 
 
+def _lift(f: Callable[[A, B], T], a: Parser[A], b: Parser[B]) -> Parser[T]:
+    return a.and_then(lambda x: b.and_then(lambda y: Pure(f(x, y))))
+
+
 def replicate(n: int, parser: Parser[T]) -> Parser[list[T]]:
     """Run parser n times and yield a list of the results."""
-    # TODO: There must be a less awful way of writing this.
-    result = []
 
-    def callback(value: T) -> Parser[T]:
-        # TODO: I bet I could make this lazy with coroutines or something.
-        result.append(value)
-        return parser
+    def cons(x: T, ys: list[T]) -> list[T]:
+        return [x] + ys
 
-    if n < 1:
-        # TODO: Probably need a "Null" or "Fail" parser that just raises StopIteration.
-        raise NotImplementedError("jml doesn't know what he's doing")
-
-    p = parser
-    for i in range(1, n):
-        p = p.and_then(lambda x: callback(x))
-
-    def wrap_up(value: T) -> Parser[list[T]]:
-        result.append(value)
-        final = Pure(list(result))
-        result[:] = []
-        return final
-
-    return p.and_then(wrap_up)
+    stack: list[Parser[list[T]]] = [Pure([])]
+    for i in range(n):
+        stack.append(_lift(cons, parser, stack[-1]))
+    return stack[-1]
 
 
 # TODO: Ongoing MyPy issue with Pure & AndThen interaction

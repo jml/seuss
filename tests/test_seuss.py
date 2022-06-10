@@ -5,6 +5,10 @@ from datetime import date
 from seuss import AndThen, Digit, Map, Pure, String, replicate
 
 
+def parse(parser, text):
+    return list(parser.parse(text))
+
+
 def parse_strict(parser, text):
     """Parse 'text' and fail if the whole string isn't parsed or if there's more than one way to parse it."""
     # Might add this to the main class.
@@ -33,6 +37,10 @@ def test_pure_and_then() -> None:
     p = Pure("42")
     q = AndThen(p, String)
     assert list(q.parse("420")) == list(String("42").parse("420"))
+
+
+def test_pure_list() -> None:
+    parse_strict(Pure([]).then(Digit()), "9") == 9
 
 
 def test_and_then_pure() -> None:
@@ -95,10 +103,12 @@ def test_parse_iso_date_then() -> None:
 
 
 def test_replicate() -> None:
-    p = replicate(4, Digit().map(int))
-    assert parse_strict(p, "1989") == [1, 9, 8, 9]
-    q = replicate(2, Digit()).map("".join).map(int)
-    assert parse_strict(q, "42") == 42
+    digit = Digit()
+    assert parse(replicate(0, digit), "1989") == [([], "1989")]
+    assert parse(replicate(1, digit), "1989") == [(["1"], "989")]
+    assert parse(replicate(2, digit), "1989") == [(["1", "9"], "89")]
+    assert parse(replicate(3, digit), "1989") == [(["1", "9", "8"], "9")]
+    assert parse(replicate(4, digit), "1989") == [(["1", "9", "8", "9"], "")]
 
 
 def test_parse_iso_date_replicate() -> None:
