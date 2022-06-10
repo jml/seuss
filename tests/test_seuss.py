@@ -24,8 +24,8 @@ def test_string() -> None:
 
 
 def test_digit() -> None:
-    assert list(Digit().parse("1989")) == [("1", "989")]
-    assert list(Digit().parse("foo 1989")) == []
+    assert list(Digit.parse("1989")) == [("1", "989")]
+    assert list(Digit.parse("foo 1989")) == []
 
 
 def test_pure() -> None:
@@ -40,38 +40,38 @@ def test_pure_and_then() -> None:
 
 
 def test_pure_list() -> None:
-    parse_strict(Pure([]).then(Digit()), "9") == 9
+    parse_strict(Pure([]).then(Digit), "9") == 9
 
 
 def test_and_then_pure() -> None:
-    p = Digit()
+    p = Digit
     q = AndThen(p, Pure)  # type: ignore
     assert list(q.parse("420")) == list(p.parse("420"))
 
 
 def test_map() -> None:
-    p = Map(int, Digit())
+    p = Map(int, Digit)
     assert list(p.parse("420")) == [(4, "20")]
 
 
 def test_map_helper() -> None:
-    assert list(Digit().map(int).parse("420")) == [(4, "20")]
+    assert list(Digit.map(int).parse("420")) == [(4, "20")]
 
 
 def test_and_then_helper() -> None:
-    assert list(Digit().and_then(Pure).parse("420")) == list(Digit().parse("420"))  # type: ignore
+    assert list(Digit.and_then(Pure).parse("420")) == list(Digit.parse("420"))  # type: ignore
 
 
 def test_and_then_results() -> None:
     """We can chain together parsers to parse more complex strings."""
-    two_digit_number = (
-        Digit().and_then(lambda a: Digit().and_then(lambda b: Pure(a + b))).map(int)
-    )
+    two_digit_number = Digit.and_then(
+        lambda a: Digit.and_then(lambda b: Pure(a + b))
+    ).map(int)
     assert parse_strict(two_digit_number, "42") == 42
 
 
 def test_parse_iso_date() -> None:
-    two_digits = Digit().and_then(lambda a: Digit().and_then(lambda b: Pure(a + b)))
+    two_digits = Digit.and_then(lambda a: Digit.and_then(lambda b: Pure(a + b)))
     four_digits = two_digits.and_then(
         lambda a: two_digits.and_then(lambda b: Pure(a + b))
     )
@@ -87,7 +87,7 @@ def test_parse_iso_date() -> None:
 
 
 def test_parse_iso_date_then() -> None:
-    two_digits = Digit().and_then(lambda a: Digit().and_then(lambda b: Pure(a + b)))
+    two_digits = Digit.and_then(lambda a: Digit.and_then(lambda b: Pure(a + b)))
     four_digits = two_digits.and_then(
         lambda a: two_digits.and_then(lambda b: Pure(a + b))
     )
@@ -103,7 +103,7 @@ def test_parse_iso_date_then() -> None:
 
 
 def test_replicate() -> None:
-    digit = Digit()
+    digit = Digit
     assert parse(replicate(0, digit), "1989") == [([], "1989")]
     assert parse(replicate(1, digit), "1989") == [(["1"], "989")]
     assert parse(replicate(2, digit), "1989") == [(["1", "9"], "89")]
@@ -112,8 +112,8 @@ def test_replicate() -> None:
 
 
 def test_parse_iso_date_replicate() -> None:
-    year = replicate(4, Digit()).map("".join).map(int)
-    month_or_day = replicate(2, Digit()).map("".join).map(int)
+    year = replicate(4, Digit).map("".join).map(int)
+    month_or_day = replicate(2, Digit).map("".join).map(int)
     sep = String("-")
     iso_date = year.and_then(
         lambda y: sep.then(

@@ -57,18 +57,16 @@ def String(match: str) -> Parser[str]:
     return Parser(parse)
 
 
-# TODO: Digit shouldn't be a function, it just does one thing.
-def Digit() -> Parser[str]:
-    """Parse a single digit.
+def _parse_digit(text: str) -> Iterator[tuple[str, str]]:
+    if text and text[0] in string.digits:
+        yield (text[0], text[1:])
 
-    Return it as a character to give us more flexibility in how we use it.
-    """
 
-    def parse(text: str) -> Iterator[tuple[str, str]]:
-        if text and text[0] in string.digits:
-            yield (text[0], text[1:])
+Digit = Parser(_parse_digit)
+"""Parse a single digit.
 
-    return Parser(parse)
+Return it as a character to give us more flexibility in how we use it.
+"""
 
 
 def Map(function: Callable[[A], B], parser: Parser[A]) -> Parser[B]:
