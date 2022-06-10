@@ -97,8 +97,15 @@ def AndThen(previous: Parser[A], callback: Callable[[A], Parser[B]]) -> Parser[B
     return Parser(parse)
 
 
-def _lift(f: Callable[[A, B], T], a: Parser[A], b: Parser[B]) -> Parser[T]:
-    return a.and_then(lambda x: b.and_then(lambda y: Pure(f(x, y))))
+def Lift(f: Callable[[A, B], T], a: Parser[A], b: Parser[B]) -> Parser[T]:
+    """Run one parser after the other and combine the results."""
+
+    def parse(text: str) -> Iterator[tuple[T, str]]:
+        for (x, remaining) in a.parse(text):
+            for (y, remaining) in b.parse(remaining):
+                yield (f(x, y), remaining)
+
+    return Parser(parse)
 
 
 def replicate(n: int, parser: Parser[T]) -> Parser[list[T]]:
@@ -109,12 +116,11 @@ def replicate(n: int, parser: Parser[T]) -> Parser[list[T]]:
 
     stack: list[Parser[list[T]]] = [Pure([])]
     for i in range(n):
-        stack.append(_lift(cons, parser, stack[-1]))
+        stack.append(Lift(cons, parser, stack[-1]))
     return stack[-1]
 
 
 # TODO: Ongoing MyPy issue with Pure & AndThen interaction
-# TODO: Some way of handling applicative
 # TODO: sequence
 # TODO: yield expression syntax?
 # TODO: end of input
