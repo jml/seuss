@@ -83,11 +83,28 @@ def IsCharacter(predicate: Callable[[str], bool]) -> Parser[str]:
     return Parser(parse)
 
 
-Digit = IsCharacter(lambda c: c in string.digits)
+def Characters(characters: str) -> Parser[str]:
+    """Parse something that must be one of the supplied characters.
+
+    Equivalent to OneOf(map(String, characters)) or IsCharacter(lambda x: x in characters).
+    """
+
+    def parse(text: str) -> Iterator[tuple[str, str]]:
+        if text and text[0] in characters:
+            yield (text[0], text[1:])
+
+    return Parser(parse)
+
+
+Digit = Characters(string.digits)
 """Parse a single digit.
 
 Return it as a character to give us more flexibility in how we use it.
 """
+
+
+Whitespace = Characters(string.whitespace)
+"""Parse a single whitespace character."""
 
 
 def _parse_end_of_input(text: str) -> Iterator[tuple[None, str]]:
