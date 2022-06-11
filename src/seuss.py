@@ -1,7 +1,7 @@
 """An experiment in Python parsers."""
 
 import string
-from typing import Callable, Generic, Iterator, Protocol, TypeVar
+from typing import Callable, Generic, Iterable, Iterator, Protocol, TypeVar
 
 import attrs
 
@@ -49,6 +49,18 @@ class Parser(Generic[T]):
     def passthrough(self, next_parser: "Parser[A]") -> "Parser[T]":
         # TODO: Better name
         return AndThen(self, lambda a: next_parser.map(lambda _: a))
+
+    def __or__(self, other: "Parser[T]") -> "Parser[T]":
+        return Any([self, other])
+
+    @classmethod
+    def Zero(cls) -> "Parser[T]":
+        """A parser that rejects all input."""
+
+        def reject(text: str) -> Iterator[tuple[T, str]]:
+            yield from ()
+
+        return cls(reject)
 
 
 def String(match: str) -> Parser[str]:
@@ -117,6 +129,16 @@ def Lift(f: Callable[[A, B], T], a: Parser[A], b: Parser[B]) -> Parser[T]:
         for (x, remaining) in a.parse(text):
             for (y, remaining) in b.parse(remaining):
                 yield (f(x, y), remaining)
+
+    return Parser(parse)
+
+
+def Any(parsers: Iterable[Parser[T]]) -> Parser[T]:
+    """Make a parser that matches any of the given parsers."""
+
+    def parse(text: str) -> Iterator[tuple[T, str]]:
+        for parser in parsers:
+            yield from parser.parse(text)
 
     return Parser(parse)
 

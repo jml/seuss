@@ -2,7 +2,9 @@
 
 from datetime import date
 
-from seuss import AndThen, Digit, EndOfInput, Map, Pure, String, replicate
+import pytest
+
+from seuss import AndThen, Any, Digit, EndOfInput, Lift, Map, Pure, String, replicate
 
 
 def parse(parser, text):
@@ -64,23 +66,17 @@ def test_and_then_helper() -> None:
 
 def test_and_then_results() -> None:
     """We can chain together parsers to parse more complex strings."""
-    two_digit_number = Digit.and_then(
-        lambda a: Digit.and_then(lambda b: Pure(a + b))
-    ).map(int)
+    two_digit_number = Digit.and_then(lambda a: Digit.and_then(lambda b: Pure(a + b))).map(int)
     assert parse_strict(two_digit_number, "42") == 42
 
 
 def test_parse_iso_date() -> None:
     two_digits = Digit.and_then(lambda a: Digit.and_then(lambda b: Pure(a + b)))
-    four_digits = two_digits.and_then(
-        lambda a: two_digits.and_then(lambda b: Pure(a + b))
-    )
+    four_digits = two_digits.and_then(lambda a: two_digits.and_then(lambda b: Pure(a + b)))
     sep = String("-")
     iso_date = four_digits.map(int).and_then(
         lambda year: sep.and_then(lambda _: two_digits.map(int)).and_then(
-            lambda month: sep.and_then(lambda _: two_digits.map(int)).and_then(
-                lambda day: Pure(date(year, month, day))
-            )
+            lambda month: sep.and_then(lambda _: two_digits.map(int)).and_then(lambda day: Pure(date(year, month, day)))
         )
     )
     assert parse_strict(iso_date, "2022-06-09") == date(2022, 6, 9)
@@ -88,15 +84,11 @@ def test_parse_iso_date() -> None:
 
 def test_parse_iso_date_then() -> None:
     two_digits = Digit.and_then(lambda a: Digit.and_then(lambda b: Pure(a + b)))
-    four_digits = two_digits.and_then(
-        lambda a: two_digits.and_then(lambda b: Pure(a + b))
-    )
+    four_digits = two_digits.and_then(lambda a: two_digits.and_then(lambda b: Pure(a + b)))
     sep = String("-")
     iso_date = four_digits.map(int).and_then(
         lambda year: sep.then(two_digits.map(int)).and_then(
-            lambda month: sep.then(two_digits.map(int)).and_then(
-                lambda day: Pure(date(year, month, day))
-            )
+            lambda month: sep.then(two_digits.map(int)).and_then(lambda day: Pure(date(year, month, day)))
         )
     )
     assert parse_strict(iso_date, "2022-06-09") == date(2022, 6, 9)
@@ -117,9 +109,7 @@ def test_parse_iso_date_replicate() -> None:
     sep = String("-")
     iso_date = year.and_then(
         lambda y: sep.then(
-            month_or_day.and_then(
-                lambda m: sep.then(month_or_day.and_then(lambda d: Pure(date(y, m, d))))
-            )
+            month_or_day.and_then(lambda m: sep.then(month_or_day.and_then(lambda d: Pure(date(y, m, d)))))
         )
     )
     assert parse_strict(iso_date, "2022-06-09") == date(2022, 6, 9)
@@ -127,3 +117,22 @@ def test_parse_iso_date_replicate() -> None:
 
 def test_parse_end_of_input() -> None:
     assert list(replicate(2, Digit).passthrough(EndOfInput).parse("420")) == []
+
+
+def test_any() -> None:
+    foo = String("foo")
+    bar = String("bar")
+    foobar = Any([foo, bar])
+    combined = Lift(lambda x, y: (x, y), foobar, foobar)
+    assert parse_strict(combined, "foofoo") == ("foo", "foo")
+    assert parse_strict(combined, "foobar") == ("foo", "bar")
+    assert parse_strict(combined, "barfoo") == ("bar", "foo")
+    assert parse_strict(combined, "barbar") == ("bar", "bar")
+
+
+def test_monoid() -> None:
+    foo = String("foo")
+    bar = String("bar")
+    assert parse_strict(foo | bar, "foo") == "foo"
+    # TODO: foo.Zero to make the typing work. There must be a better way.
+    assert parse_strict(foo | bar | foo.Zero(), "foo") == "foo"
