@@ -192,7 +192,6 @@ def many(parser: Parser[T]) -> Parser[list[T]]:
         for (value, remainder) in parser.parse(text):
             bottom = True
             for items in parse(remainder):
-                print(items)
                 (values, rump) = items
                 yield [value] + values, rump
         if not bottom:
