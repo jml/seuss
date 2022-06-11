@@ -51,7 +51,7 @@ class Parser(Generic[T]):
         return AndThen(self, lambda a: next_parser.map(lambda _: a))
 
     def __or__(self, other: "Parser[T]") -> "Parser[T]":
-        return Any([self, other])
+        return OneOf([self, other])
 
     @classmethod
     def Zero(cls) -> "Parser[T]":
@@ -138,7 +138,7 @@ def Lift(f: Callable[[A, B], T], a: Parser[A], b: Parser[B]) -> Parser[T]:
     return Parser(parse)
 
 
-def Any(parsers: Iterable[Parser[T]]) -> Parser[T]:
+def OneOf(parsers: Iterable[Parser[T]]) -> Parser[T]:
     """Make a parser that matches any of the given parsers."""
 
     def parse(text: str) -> Iterator[tuple[T, str]]:

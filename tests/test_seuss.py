@@ -4,7 +4,7 @@ from datetime import date
 
 import pytest
 
-from seuss import AndThen, Any, Digit, EndOfInput, Lift, Map, Pure, String, replicate
+from seuss import AndThen, Digit, EndOfInput, Lift, Map, OneOf, Pure, String, replicate
 
 
 def parse(parser, text):
@@ -122,7 +122,7 @@ def test_parse_end_of_input() -> None:
 def test_any() -> None:
     foo = String("foo")
     bar = String("bar")
-    foobar = Any([foo, bar])
+    foobar = OneOf([foo, bar])
     combined = Lift(lambda x, y: (x, y), foobar, foobar)
     assert parse_strict(combined, "foofoo") == ("foo", "foo")
     assert parse_strict(combined, "foobar") == ("foo", "bar")
