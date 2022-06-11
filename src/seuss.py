@@ -73,12 +73,17 @@ def String(match: str) -> Parser[str]:
     return Parser(parse)
 
 
-def _parse_digit(text: str) -> Iterator[tuple[str, str]]:
-    if text and text[0] in string.digits:
-        yield (text[0], text[1:])
+def IsCharacter(predicate: Callable[[str], bool]) -> Parser[str]:
+    """Parse out a character that matches the predicate."""
+
+    def parse(text: str) -> Iterator[tuple[str, str]]:
+        if text and predicate(text[0]):
+            yield (text[0], text[1:])
+
+    return Parser(parse)
 
 
-Digit = Parser(_parse_digit)
+Digit = IsCharacter(lambda c: c in string.digits)
 """Parse a single digit.
 
 Return it as a character to give us more flexibility in how we use it.
