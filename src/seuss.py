@@ -180,3 +180,6 @@ def replicate(n: int, parser: Parser[T]) -> Parser[list[T]]:
 # TODO: Ongoing MyPy issue with Pure & AndThen interaction
 # TODO: sequence
 # TODO: yield expression syntax?
+# TODO: Can't figure out how to do `many` or `sepBy`
+# TODO: Nested parentheses?
+# TODO: Come up with an example where we get multiple parses, i.e. where `list of things and strings` matters.
