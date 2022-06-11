@@ -4,7 +4,7 @@ from datetime import date
 
 import pytest
 
-from seuss import AndThen, Digit, EndOfInput, Lift, Map, OneOf, Pure, String, replicate
+from seuss import AndThen, Digit, EndOfInput, Lift, Map, OneOf, Pure, String, many, replicate
 
 
 def parse(parser, text):
@@ -136,3 +136,9 @@ def test_monoid() -> None:
     assert parse_strict(foo | bar, "foo") == "foo"
     # TODO: foo.Zero to make the typing work. There must be a better way.
     assert parse_strict(foo | bar | foo.Zero(), "foo") == "foo"
+
+
+def test_many() -> None:
+    assert parse(many(Digit), "a") == [([], "a")]
+    assert parse(many(Digit), "1") == [(["1"], "")]
+    assert parse_strict(many(Digit), "1989") == ["1", "9", "8", "9"]

@@ -128,7 +128,6 @@ def Pure(value: T) -> Parser[T]:
     """Inject a value into the parsed result."""
 
     def parse(text: str) -> Iterator[tuple[T, str]]:
-        print(f"lifting {value}")
         yield (value, text)
 
     return Parser(parse)
@@ -168,18 +167,47 @@ def OneOf(parsers: Iterable[Parser[T]]) -> Parser[T]:
 def replicate(n: int, parser: Parser[T]) -> Parser[list[T]]:
     """Run parser n times and yield a list of the results."""
 
-    def cons(x: T, ys: list[T]) -> list[T]:
-        return [x] + ys
-
     stack: list[Parser[list[T]]] = [Pure([])]
     for i in range(n):
         stack.append(Lift(cons, parser, stack[-1]))
     return stack[-1]
 
 
+def many(parser: Parser[T]) -> Parser[list[T]]:
+    """Execute a parser zero or more times."""
+
+    # TODO: Is there a way to implement this without having to delve into the parser layer?
+    # I haven't yet figured out how to do an Alternative-layer implementation without laziness.
+    #
+    # Here's the Haskell implementation for reference.
+    #
+    # many :: f a -> f [a]
+    # many v = many_v
+    #   where
+    #     many_v = some_v <|> pure []
+    #     some_v = liftA2 (:) v many_v
+
+    def parse(text: str) -> Iterator[tuple[list[T], str]]:
+        bottom = False
+        for (value, remainder) in parser.parse(text):
+            bottom = True
+            for items in parse(remainder):
+                print(items)
+                (values, rump) = items
+                yield [value] + values, rump
+        if not bottom:
+            yield [], text
+
+    return Parser(parse)
+
+
 # TODO: Ongoing MyPy issue with Pure & AndThen interaction
 # TODO: sequence
 # TODO: yield expression syntax?
-# TODO: Can't figure out how to do `many` or `sepBy`
+# TODO: Can't figure out how to do `many` or `sepBy` at the monad layer
 # TODO: Nested parentheses?
 # TODO: Come up with an example where we get multiple parses, i.e. where `list of things and strings` matters.
+
+
+def cons(x: T, ys: list[T]) -> list[T]:
+    return [x] + ys
